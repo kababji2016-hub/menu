@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6">
+<title>عرض الملف</title>
+<style>
+  html, body { margin: 0; background: #525659; }
+  #pages { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 0; }
+  canvas { width: min(100%, 900px); height: auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  #msg { color: #fff; font-family: sans-serif; text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+<div id="msg">جاري التحميل...</div>
+<div id="pages"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  const FILE = "file.pdf"; // اسم ملف الـ PDF
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const scale = 2.5 * (window.devicePixelRatio || 1); // دقة عالية عشان التكبير يكون واضح
+  pdfjsLib.getDocument(FILE).promise.then(async pdf => {
+    document.getElementById("msg").remove();
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const vp = page.getViewport({ scale });
+      const c = document.createElement("canvas");
+      c.width = vp.width; c.height = vp.height;
+      document.getElementById("pages").appendChild(c);
+      await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+    }
+  }).catch(() => {
+    document.getElementById("msg").textContent = "تعذر تحميل الملف";
+  });
+</script>
+</body>
+</html>
